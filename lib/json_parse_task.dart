@@ -52,38 +52,41 @@ class _JsonParseTaskState extends State<JsonParseTask> {
                 style: const TextStyle(fontSize: 18),
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                width: MediaQuery.of(context).size.width / 2,
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _searchController,
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return "Search Id is Empty";
-                          }
-                          return null;
-                        },
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Search by ID',
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width / 2,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _searchController,
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              return "Search Id is Empty";
+                            }
+                            return null;
+                          },
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Search by ID',
+                          ),
                         ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            int id = int.parse(_searchController.text);
-                            String title = searchById(id);
-                            setState(() {
-                              searchedTitle = title;
-                            });
-                          }
-                        },
-                        child: const Text('Search'),
-                      )
-                    ],
+                        ElevatedButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              int id = int.parse(_searchController.text);
+                              String title = searchById(id);
+                              setState(() {
+                                searchedTitle = title;
+                              });
+                            }
+                          },
+                          child: const Text('Search'),
+                        )
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -106,6 +109,7 @@ class _JsonParseTaskState extends State<JsonParseTask> {
                 child: const Text('Parse Input 2'),
               ),
               DataTable(
+                dividerThickness: 3,
                 columns: const [
                   DataColumn(label: Text('ID')),
                   DataColumn(label: Text('Title')),

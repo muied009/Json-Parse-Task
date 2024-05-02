@@ -1,28 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 
+import 'androi_versions.dart';
+
 class JsonParseTask extends StatefulWidget {
   const JsonParseTask({super.key});
 
   @override
   State<JsonParseTask> createState() => _JsonParseTaskState();
-}
-
-class AndroidVersion {
-  AndroidVersion({
-    this.id,
-    this.title,
-  });
-
-  int? id;
-  String? title;
-
-  factory AndroidVersion.fromJson(Map<String, dynamic> json) {
-    return AndroidVersion(
-      id: json['id'],
-      title: json['title'],
-    );
-  }
 }
 
 class _JsonParseTaskState extends State<JsonParseTask> {

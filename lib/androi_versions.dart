@@ -1,11 +1,8 @@
 class AndroidVersion {
-  AndroidVersion({
-    this.id,
-    this.title,
-  });
+  final int id;
+  final String title;
 
-  int? id;
-  String? title;
+  AndroidVersion({required this.id, required this.title});
 
   factory AndroidVersion.fromJson(Map<String, dynamic> json) {
     return AndroidVersion(

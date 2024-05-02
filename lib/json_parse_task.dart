@@ -11,31 +11,12 @@ class JsonParseTask extends StatefulWidget {
 }
 
 class _JsonParseTaskState extends State<JsonParseTask> {
-  final String input1 = '''
-    [
-      {"id":1,"title":"Gingerbread"},
-      {"id":2,"title":"Jellybean"},
-      {"id":3,"title":"KitKat"},
-      {"id":4,"title":"Lollipop"},
-      {"id":5,"title":"Pie"},
-      {"id":6,"title":"Oreo"},
-      {"id":7,"title":"Nougat"}
-    ]
+  final String inputJson1 = '''
+    [{"0":{"id":1,"title":"Gingerbread"},"1":{"id":2,"title":"Jellybean"},"3":{"id":3,"title":"KitKat"}},[{"id":4,"title":"Lollipop"},{"id":5,"title":"Pie"},{"id":6,"title":"Oreo"},{"id":7,"title":"Nougat"}]]
   ''';
 
-  final String input2 = '''
-    [
-      {"id":1,"title":"Gingerbread"},
-      {"id":2,"title":"Jellybean"},
-      {"id":3,"title":"KitKat"},
-      {"id":8,"title":"Froyo"},
-      {"id":9,"title":"Éclair"},
-      {"id":10,"title":"Donut"},
-      {"id":4,"title":"Lollipop"},
-      {"id":5,"title":"Pie"},
-      {"id":6,"title":"Oreo"},
-      {"id":7,"title":"Nougat"}
-    ]
+  final String inputJson2 = '''
+    [{"0":{"id":1,"title":"Gingerbread"},"1":{"id":2,"title":"Jellybean"},"3":{"id":3,"title":"KitKat"}},{"0":{"id":8,"title":"Froyo"},"2":{"id":9,"title":"Éclair"},"3":{"id":10,"title":"Donut"}},[{"id":4,"title":"Lollipop"},{"id":5,"title":"Pie"},{"id":6,"title":"Oreo"},{"id":7,"title":"Nougat"}]]
   ''';
 
   final _formKey = GlobalKey<FormState>();
@@ -51,10 +32,10 @@ class _JsonParseTaskState extends State<JsonParseTask> {
   }
 
   String searchById(int id) {
-    var jsonData = parseJson(input1);
+    var jsonData = parseJson(inputJson1);
     for (var item in jsonData) {
       if (item.id == id) {
-        return item.title!;
+        return item.title;
       }
     }
     return 'Not found';
@@ -62,7 +43,55 @@ class _JsonParseTaskState extends State<JsonParseTask> {
 
   List<AndroidVersion> parseJson(String jsonInput) {
     List<dynamic> data = jsonDecode(jsonInput);
-    return data.map((item) => AndroidVersion.fromJson(item)).toList();
+    List<AndroidVersion> result = [];
+
+    // Parse the object containing nested objects
+    Map<String, dynamic> objectData = Map<String, dynamic>.from(data[0]);
+    int lastParsedIndex = -1;
+    objectData.forEach((key, value) {
+      int currentIndex = int.parse(key);
+      // Insert empty items for missing indices
+      for (int i = lastParsedIndex + 1; i < currentIndex; i++) {
+        result.add(AndroidVersion(id: i, title: ''));
+      }
+      result.add(AndroidVersion.fromJson(value));
+      lastParsedIndex = currentIndex;
+    });
+
+    // Parse the array of objects, if present
+    if (data.length > 1) {
+      dynamic secondData = data[1];
+      if (secondData is List) {
+        List<dynamic> arrayData = secondData;
+        arrayData.forEach((value) {
+          result.add(AndroidVersion.fromJson(value));
+        });
+      } else if (secondData is Map) {
+        Map<String, dynamic> secondObject = Map<String, dynamic>.from(secondData);
+        int lastParsedIndexInSecond = -1;
+        secondObject.forEach((key, value) {
+          int currentIndex = int.parse(key);
+          // Insert empty items for missing indices
+          for (int i = lastParsedIndexInSecond + 1; i < currentIndex; i++) {
+            result.add(AndroidVersion(id: i, title: ''));
+          }
+          result.add(AndroidVersion.fromJson(value));
+          lastParsedIndexInSecond = currentIndex;
+        });
+      }
+    }
+
+    // If there's additional data after the second item, parse it as well
+    for (int i = 2; i < data.length; i++) {
+      dynamic additionalData = data[i];
+      if (additionalData is List) {
+        List<dynamic> arrayData = additionalData;
+        arrayData.forEach((value) {
+          result.add(AndroidVersion.fromJson(value));
+        });
+      }
+    }
+    return result;
   }
 
   @override
@@ -119,7 +148,8 @@ class _JsonParseTaskState extends State<JsonParseTask> {
               ElevatedButton(
                 onPressed: () {
                   setState(() {
-                    dataTableData = parseJson(input1);
+                    dataTableData = parseJson(inputJson1);
+                    print(dataTableData);
                   });
                 },
                 child: const Text('Parse Input 1'),
@@ -127,22 +157,33 @@ class _JsonParseTaskState extends State<JsonParseTask> {
               ElevatedButton(
                 onPressed: () {
                   setState(() {
-                    dataTableData = parseJson(input2);
+                    dataTableData = parseJson(inputJson2);
                   });
                 },
                 child: const Text('Parse Input 2'),
               ),
-              DataTable(
-                columns: const [
-                  DataColumn(label: Text('ID')),
-                  DataColumn(label: Text('Title')),
-                ],
-                rows: dataTableData.map((item) {
-                  return DataRow(cells: [
-                    DataCell(Text(item.id.toString())),
-                    DataCell(Text(item.title ?? '')),
-                  ]);
-                }).toList(),
+              GridView.builder(
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  mainAxisSpacing: 2.0,
+                  crossAxisSpacing: 2.0,
+                ),
+                itemCount: dataTableData.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final item = dataTableData[index];
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item.title ?? ''),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),

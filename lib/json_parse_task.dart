@@ -42,55 +42,58 @@ class _JsonParseTaskState extends State<JsonParseTask> {
   }
 
   List<AndroidVersion> parseJson(String jsonInput) {
+
+    /// This line decodes the JSON string into a list of dynamic objects. The dynamic type is used here because
+    /// JSON data can contain various types of values such as maps, lists, strings, numbers, etc.
     List<dynamic> data = jsonDecode(jsonInput);
+
+    /// this line initializes an empty list to store the parsed AndroidVersion objects.
     List<AndroidVersion> result = [];
 
-    // Parse the object containing nested objects
-    Map<String, dynamic> objectData = Map<String, dynamic>.from(data[0]);
+    /// This variable keeps track of the last parsed index while iterating through the JSON data.
     int lastParsedIndex = -1;
-    objectData.forEach((key, value) {
-      int currentIndex = int.parse(key);
-      // Insert empty items for missing indices
-      for (int i = lastParsedIndex + 1; i < currentIndex; i++) {
-        result.add(AndroidVersion(id: i, title: ''));
-      }
-      result.add(AndroidVersion.fromJson(value));
-      lastParsedIndex = currentIndex;
-    });
 
-    // Parse the array of objects, if present
-    if (data.length > 1) {
-      dynamic secondData = data[1];
-      if (secondData is List) {
-        List<dynamic> arrayData = secondData;
-        arrayData.forEach((value) {
-          result.add(AndroidVersion.fromJson(value));
-        });
-      } else if (secondData is Map) {
-        Map<String, dynamic> secondObject = Map<String, dynamic>.from(secondData);
-        int lastParsedIndexInSecond = -1;
-        secondObject.forEach((key, value) {
+    ///This loop iterates over each item in the JSON data.
+    for (var item in data) {
+
+      // Parse object containing nested objects
+      ///This condition checks if the current item is a map (object) with string keys and dynamic values,
+      /// indicating it contains nested objects.
+      if (item is Map<String, dynamic>) {
+
+        ///If the item is a map, this loop iterates over each key-value pair in the map.
+        item.forEach((key, value) {
+
+          ///This line parses the key (which represents the index) as an integer to determine the current index.
           int currentIndex = int.parse(key);
-          // Insert empty items for missing indices
-          for (int i = lastParsedIndexInSecond + 1; i < currentIndex; i++) {
+
+          ///This loop inserts empty AndroidVersion objects for any missing indices between the last parsed index and the current index.
+          ///It ensures that the list is filled with consecutive indices.
+          for (int i = lastParsedIndex + 1; i < currentIndex; i++) {
             result.add(AndroidVersion(id: i, title: ''));
           }
+
+          ///this line constructs an AndroidVersion object from the nested object (value) and adds it to the result list.
           result.add(AndroidVersion.fromJson(value));
-          lastParsedIndexInSecond = currentIndex;
+
+          ///After processing the current index, this line updates the lastParsedIndex variable.
+          lastParsedIndex = currentIndex;
+        });
+      }
+
+      // Parse array of objects
+      ///This condition checks if the current item is a list, indicating it contains an array of objects.
+      else if (item is List<dynamic>) {
+
+        ///Inside this loop, each item in the array is processed.
+        item.forEach((value) {
+
+          ///This line constructs an AndroidVersion object from each item in the array and adds it to the result list.
+          result.add(AndroidVersion.fromJson(value));
         });
       }
     }
 
-    // If there's additional data after the second item, parse it as well
-    for (int i = 2; i < data.length; i++) {
-      dynamic additionalData = data[i];
-      if (additionalData is List) {
-        List<dynamic> arrayData = additionalData;
-        arrayData.forEach((value) {
-          result.add(AndroidVersion.fromJson(value));
-        });
-      }
-    }
     return result;
   }
 
@@ -136,6 +139,7 @@ class _JsonParseTaskState extends State<JsonParseTask> {
                             String title = searchById(id);
                             setState(() {
                               searchedTitle = title;
+                              _searchController.text = '';
                             });
                           }
                         },
